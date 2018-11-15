@@ -50,19 +50,4 @@ public class MultiThreadServer {
 			System.out.println("111");
 		}
 	}
-	/**
-     * 处理读取客户端发来的信息事件
-     */
-    private void read(SelectionKey key) throws Exception {
-        // 服务器可读消息，得到事件发生的socket通道
-        SocketChannel channel = (SocketChannel) key.channel();
-        // 读取的缓冲区
-        ByteBuffer buffer = ByteBuffer.allocate(10);
-        channel.read(buffer);
-        byte[] data = buffer.array();
-        String msg = new String(data).trim();
-        System.out.println("server receive from client: " + msg);
-        ByteBuffer outBuffer = ByteBuffer.wrap(msg.getBytes());
-        channel.write(outBuffer);
-    }
 }
