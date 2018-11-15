@@ -12,7 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.Date;
+
 
 public class Response {
      private static final int BUFFER_SIZE = 1024;
@@ -31,27 +31,51 @@ public class Response {
           
            FileInputStream fis = null;
            try {
-                File file = new File(HttpServer.WEB_ROOT, request.getUri());
+        	   File file = null;
+        	   	if("\\download".equals(request.getUri())){
+        	   		file = new File(MultiThreadServer.WEB_ROOT, "mfrsOut.war");
+        	   	}else{
+        	   		file = new File(MultiThreadServer.WEB_ROOT, request.getUri());
+        	   	}
+                
                 
                 System.out.println("*************Http-response****************");
                 if (file.exists()) {
-                	 String line="HTTP/1.1 200 OK \r\n";                    
-                     System.out.print("line="+line);
+                	long last=file.lastModified();
+//                	JSONObject object=JSONObject.fromObject(request.toString()); 
+//                    long requestLast=Long.valueOf(object.getString("If-Modified-Since"));   
+                    String line="";
+                    if(last==request.getRequestLast()){
+                		line="HTTP/1.1 304 OK \r\n";  
+                	}else{
+                		line="HTTP/1.1 200 OK \r\n";  
+                	}
+                	 System.out.print("line="+line);
                      //sout.writeChars(line); 
                      sout.write(line.getBytes());//用字节传输，不能用字符，浏览器无法解析
+                     String header="";
+                     if("\\download".equals(request.getUri())){
+                    	 header="Content-disposition: attachment;; filename=mfrsOut.war \r\n"
+                      		 	 +"Content-Type: application/x-msdownload"+" \r\n"
+                    			 +"Content-length: "+file.length()+" \r\n";
+                     }else{
+                    	 header="Content-Type: text/html; charset=utf-8 \r\n"
+                      		 	  +"Content-length: "+file.length()+" \r\n"
+                            +"Cache-Control: no-cache "+" \r\n"
+                            +"Last-Modified: "+last+" \r\n\r\n";
+                     }
                      
-                     String header="Content-Type: text/html; charset=utf-8 \r\n"
-               		 	  +"Content-length: "+file.length()+" \r\n\r\n";
                      System.out.print("header="+header);             
                      sout.writeBytes(header);
-                     
-                     fis = new FileInputStream(file);                     
-                     byte[] bytes = new byte[BUFFER_SIZE];
-                     int ch = fis.read(bytes, 0, BUFFER_SIZE);                                      
-                     while (ch!=-1) { //ch==-1表示读到末尾了                    	
-                         sout.write(bytes, 0, ch); //写出到浏览器                        
-                         System.out.print(Arrays.toString(bytes));
-                         ch = fis.read(bytes, 0, BUFFER_SIZE);//再读会接上一次读的位置往下读，如果读到末尾就会返回-1，终止输出
+                     if(last!=request.getRequestLast()){
+                    	 fis = new FileInputStream(file);                     
+                         byte[] bytes = new byte[BUFFER_SIZE];
+                         int ch = fis.read(bytes, 0, BUFFER_SIZE);                                      
+                         while (ch!=-1) { //ch==-1表示读到末尾了                    	
+                             sout.write(bytes, 0, ch); //写出到浏览器                        
+                             System.out.print(Arrays.toString(bytes));
+                             ch = fis.read(bytes, 0, BUFFER_SIZE);//再读会接上一次读的位置往下读，如果读到末尾就会返回-1，终止输出
+                         }
                      }
                      sout.close();
                 } else {

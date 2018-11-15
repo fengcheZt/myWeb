@@ -11,6 +11,7 @@ import java.io.InputStream;
 public class Request {
      private InputStream input;
      private String uri;
+     private StringBuffer requestBF;
      public Request(InputStream input)
      {
            this.input = input;
@@ -18,7 +19,7 @@ public class Request {
       
      public void parse() {
            // Read a set of characters from the socket
-           StringBuffer request = new StringBuffer(2048);
+    	   requestBF = new StringBuffer(2048);
            int i;
            byte[] buffer = new byte[2048];
            try {
@@ -30,11 +31,11 @@ public class Request {
             
            for (int j=0; j<i; j++)
            {
-                request.append((char) buffer[j]);
+        	   requestBF.append((char) buffer[j]);
            }
            System.out.println("************Http-request*****************");
-           System.out.print(request.toString());
-           uri = parseUri(request.toString().replace('/', '\\'));
+           System.out.print(requestBF.toString());
+           uri = parseUri(requestBF.toString().replace('/', '\\'));
           
      }
       
@@ -56,5 +57,16 @@ public class Request {
      public String getUri()
      {
            return uri;
+     }
+     public long getRequestLast(){
+    	 long requestLast=0;
+    	 try{
+    		String[] a=requestBF.toString().split("\r\n");
+         	requestLast=Long.valueOf(a[a.length-1].split(":")[1].replace(" ", ""));
+    	}catch(Exception e){
+    		requestLast=0;
+    	}
+    	 
+    	return requestLast;
      }
 }
